@@ -2,7 +2,7 @@ const boardWidth = 75;
 const boardHeight = 75;
 const scale = 10;
 
-var prevBoard = [];
+var currBoard = [];
 var nextBoard = [];
 var playing = false;
 var speed = 5;
@@ -10,6 +10,7 @@ var speed = 5;
 var stepButton;
 var pauseButton;
 var resetButton;
+var randomButton;
 var speedSlider;
 
 
@@ -33,6 +34,9 @@ function setup() {
   resetButton = createButton("reset");
   resetButton.mouseClicked(reset);
 
+  randomButton = createButton("random");
+  randomButton.mouseClicked(randomize);
+
   speedSlider = createSlider(1, 50, 5, 1);
   speedSlider.mouseMoved(changeSpeed);
 }
@@ -42,10 +46,11 @@ function step() { calcBoard(); drawBoard(); }
 function pause() { playing = !playing; }
 function stop() { playing = false; }
 function reset() { stop(); resetBoard(); }
+function randomize() { stop(); randomizeBoard(); }
 function changeSpeed() { speed = speedSlider.value(); }
 function flipCell() {
   stop();
-  prevBoard[floor(mouseY / scale)][floor(mouseX / scale)] = !prevBoard[floor(mouseY / scale)][floor(mouseX / scale)];
+  currBoard[floor(mouseY / scale)][floor(mouseX / scale)] = !currBoard[floor(mouseY / scale)][floor(mouseX / scale)];
   drawBoard();
 }
 
@@ -58,10 +63,10 @@ function draw() {
 
 function setupBoard() {
   for (y = 0; y < boardHeight; y++) {
-    prevBoard.push([]);
+    currBoard.push([]);
     nextBoard.push([]);
     for (x = 0; x < boardWidth; x++) {
-      prevBoard[y].push(false);
+      currBoard[y].push(false);
       nextBoard[y].push(false);
     }
   }
@@ -71,8 +76,17 @@ function setupBoard() {
 function resetBoard() {
   for (y = 0; y < boardHeight; y++) {
     for (x = 0; x < boardWidth; x++) {
-      prevBoard[y][x] = false;
+      currBoard[y][x] = false;
       nextBoard[y][x] = false;
+    }
+  }
+  drawBoard();
+}
+
+function randomizeBoard() {
+  for (y = 0; y < boardHeight; y++) {
+    for (x = 0; x < boardWidth; x++) {
+      currBoard[y][x] = random() <= 0.25;
     }
   }
   drawBoard();
@@ -83,7 +97,7 @@ function drawBoard() {
   for (y = 0; y < boardHeight; y++) {
     for (x = 0; x < boardWidth; x++) {
       fill(255);
-      if (prevBoard[y][x]) { fill(0); }
+      if (currBoard[y][x]) { fill(0); }
       rect(x * scale, y * scale, scale, scale);
     }
   }
@@ -96,7 +110,7 @@ function calcBoard() {
     for (yOffset = -1; yOffset <= 1; yOffset++) {
       for (xOffset = -1; xOffset <= 1; xOffset++) {
         if (!(xOffset == 0 && yOffset == 0)) {
-          if (prevBoard[y + yOffset][x + xOffset]) {
+          if (currBoard[y + yOffset][x + xOffset]) {
             neighbours++;
           }
         }
@@ -108,7 +122,7 @@ function calcBoard() {
   for (y = 1; y < boardHeight - 1; y++) {
     for (x = 1; x < boardWidth - 1; x++) {
       let neighbours = countNeighbours(x, y);
-      if (prevBoard[y][x]) { // if cell is already alive
+      if (currBoard[y][x]) { // if cell is already alive
         if (neighbours == 2 || neighbours == 3) { // and it has 2 or 3 neighbours
           nextBoard[y][x] = true; // it stays alive
         } else { // else if it has more or less neighbours than that
@@ -122,10 +136,10 @@ function calcBoard() {
     }
   }
 
-  // prevBoard = nextBoard; // idk why this doesn't work, so i have to assign each individual value in another loop:
+  // currBoard = nextBoard; // idk why this doesn't work, so i have to assign each individual value in another loop:
   for (y = 1; y < boardHeight - 1; y++) {
     for (x = 1; x < boardWidth - 1; x++) {
-      prevBoard[y][x] = nextBoard[y][x];
+      currBoard[y][x] = nextBoard[y][x];
     }
   }
 }
