@@ -1,6 +1,7 @@
 const boardWidth = 75;
 const boardHeight = 75;
 const scale = 10;
+let gridWeight = 0;
 
 var currBoard = [];
 var nextBoard = [];
@@ -93,13 +94,16 @@ function randomizeBoard() {
 }
 
 function drawBoard() {
-  strokeWeight(0.5);
-  stroke(222);
+  noStroke();
+  if (gridWeight > 0) { // if there should be a grid, then its weight is set accordingly
+    strokeWeight(gridWeight);
+    stroke(0);
+  }
   for (y = 0; y < boardHeight; y++) {
     for (x = 0; x < boardWidth; x++) {
       fill(255);
       if (currBoard[y][x]) { fill(0); }
-      rect(x * scale, y * scale, scale - 0.5, scale - 0.5);
+      rect(x * scale + gridWeight / 2, y * scale + gridWeight / 2, scale - gridWeight, scale - gridWeight);
     }
   }
 }
