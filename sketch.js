@@ -5,7 +5,7 @@ const scale = 10;
 var currBoard = [];
 var nextBoard = [];
 var playing = false;
-var speed = 5;
+var speed = 25;
 
 var stepButton;
 var pauseButton;
@@ -37,7 +37,7 @@ function setup() {
   randomButton = createButton("random");
   randomButton.mouseClicked(randomize);
 
-  speedSlider = createSlider(1, 50, 5, 1);
+  speedSlider = createSlider(1, 50, 25, 1);
   speedSlider.mouseMoved(changeSpeed);
 }
 
@@ -93,35 +93,54 @@ function randomizeBoard() {
 }
 
 function drawBoard() {
-  noStroke();
+  strokeWeight(0.5);
+  stroke(222);
   for (y = 0; y < boardHeight; y++) {
     for (x = 0; x < boardWidth; x++) {
       fill(255);
       if (currBoard[y][x]) { fill(0); }
-      rect(x * scale, y * scale, scale, scale);
+      rect(x * scale, y * scale, scale - 0.5, scale - 0.5);
     }
   }
 }
 
+// function to calculate the next generation of the board
 function calcBoard() {
 
+  // closure, as knowing neighbours is only important to the calculating function
   function countNeighbours(x, y) {
     var neighbours = 0;
-    for (yOffset = -1; yOffset <= 1; yOffset++) {
-      for (xOffset = -1; xOffset <= 1; xOffset++) {
-        if (!(xOffset == 0 && yOffset == 0)) {
-          if (currBoard[y + yOffset][x + xOffset]) {
-            neighbours++;
+    let neighbourX;
+    let neighbourY;
+
+    for (yOffset = -1; yOffset <= 1; yOffset++) { // checking neighbours
+      for (xOffset = -1; xOffset <= 1; xOffset++) { // with distance 1
+        if (!(xOffset == 0 && yOffset == 0)) { // but not own cell!
+
+          neighbourX = x + xOffset; // setting relative neighbour X Position
+          if (neighbourX == -1) { neighbourX = boardWidth - 1 } // if neighbour is over the left edge look on the right edge
+          else if (neighbourX == boardWidth) { neighbourX = 0 } // if neighbour is over the right edge look on the left edge
+
+          neighbourY = y + yOffset; // setting relative neighbour Y Position
+          if (neighbourY == -1) { neighbourY = boardHeight - 1 } // if neighbour is over the top edge look on the bottom edge
+          else if (neighbourY == boardHeight) { neighbourY = 0 } // if neighbour is over the bottom edge look on the top edge
+
+          if (currBoard[neighbourY][neighbourX]) { // if there is a neighbour at that neighbout position
+            neighbours++; // then increment the neighbour count
           }
+
         }
       }
     }
-    return neighbours;
-  }
 
-  for (y = 1; y < boardHeight - 1; y++) {
-    for (x = 1; x < boardWidth - 1; x++) {
-      let neighbours = countNeighbours(x, y);
+    return neighbours;
+  } // end closure
+
+  for (y = 0; y < boardHeight; y++) { // going through all
+    for (x = 0; x < boardWidth; x++) { // current cells...
+
+      let neighbours = countNeighbours(x, y); // checking how many neighbours each one has and:
+
       if (currBoard[y][x]) { // if cell is already alive
         if (neighbours == 2 || neighbours == 3) { // and it has 2 or 3 neighbours
           nextBoard[y][x] = true; // it stays alive
@@ -129,16 +148,17 @@ function calcBoard() {
           nextBoard[y][x] = false; // it dies
         }
       } else { // else if it is already dead
-        if (neighbours == 3) { // and it has 3 neighbours
+        if (neighbours == 3) { // and it has exactly 3 neighbours
           nextBoard[y][x] = true; // a new one spawns
         }
       }
+
     }
   }
 
   // currBoard = nextBoard; // idk why this doesn't work, so i have to assign each individual value in another loop:
-  for (y = 1; y < boardHeight - 1; y++) {
-    for (x = 1; x < boardWidth - 1; x++) {
+  for (y = 0; y < boardHeight; y++) {
+    for (x = 0; x < boardWidth; x++) {
       currBoard[y][x] = nextBoard[y][x];
     }
   }
